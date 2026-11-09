@@ -4,42 +4,42 @@
 
 @layer base {
   :root {
-    /* Pale Dawn light variant */
-    --background: 220 25% 97%;
-    --foreground: 222 47% 11%;
+    /* Pale Dawn light variant (Atmospheric morning sky) */
+    --background: 218 30% 97%;
+    --foreground: 222 47% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 222 47% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 222 47% 12%;
     
     /* Warm Amber Baton accent */
-    --primary: 38 92% 48%;
-    --primary-foreground: 222 47% 11%;
+    --primary: 38 92% 46%;
+    --primary-foreground: 0 0% 100%;
     
-    --secondary: 215 25% 91%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 215 25% 92%;
+    --secondary-foreground: 222 47% 12%;
     --muted: 215 25% 92%;
-    --muted-foreground: 218 16% 45%;
-    --accent: 38 92% 95%;
-    --accent-foreground: 38 92% 35%;
+    --muted-foreground: 218 16% 42%;
+    --accent: 38 92% 94%;
+    --accent-foreground: 38 92% 32%;
     
-    --destructive: 0 84% 60%;
+    --destructive: 0 84% 56%;
     --destructive-foreground: 0 0% 98%;
     
-    --border: 215 25% 88%;
-    --input: 215 25% 88%;
-    --ring: 38 92% 48%;
+    --border: 215 25% 87%;
+    --input: 215 25% 87%;
+    --ring: 38 92% 46%;
     --radius: 0.6rem;
 
-    /* Constellation Status Colors */
-    --status-verified: 158 64% 42%;
-    --status-inferred: 38 92% 48%;
-    --status-conflicting: 0 84% 60%;
-    --status-missing: 215 16% 47%;
+    /* Constellation Status Colors (Light Theme) */
+    --status-verified: 158 64% 38%;
+    --status-inferred: 38 92% 44%;
+    --status-conflicting: 0 84% 55%;
+    --status-missing: 215 16% 45%;
   }
 
   .dark {
-    /* Deep Midnight Navy */
+    /* Deep Midnight Navy (Starry nocturnal sky) */
     --background: 224 50% 6%;
     --foreground: 210 40% 98%;
     --card: 224 45% 9%;
@@ -65,7 +65,7 @@
     --input: 222 35% 16%;
     --ring: 38 92% 50%;
 
-    /* Constellation Status Colors */
+    /* Constellation Status Colors (Dark Theme) */
     --status-verified: 158 64% 48%;
     --status-inferred: 38 92% 50%;
     --status-conflicting: 0 84% 60%;
@@ -82,17 +82,32 @@
     font-feature-settings: "rlig" 1, "calt" 1;
     min-height: 100vh;
     position: relative;
+    transition: background-color 0.25s ease, color 0.25s ease;
   }
 
-  /* Subtle starfield background pattern */
+  /* Subtle celestial starfield background pattern - Light Theme (Dawn) */
   .starfield-bg {
+    background-image: 
+      radial-gradient(1px 1px at 20px 30px, rgba(30, 41, 59, 0.08), rgba(0,0,0,0)),
+      radial-gradient(1.5px 1.5px at 100px 150px, rgba(217, 119, 6, 0.22), rgba(0,0,0,0)),
+      radial-gradient(1px 1px at 240px 70px, rgba(30, 41, 59, 0.07), rgba(0,0,0,0)),
+      radial-gradient(1.5px 1.5px at 320px 220px, rgba(30, 41, 59, 0.09), rgba(0,0,0,0)),
+      radial-gradient(1px 1px at 450px 110px, rgba(30, 41, 59, 0.07), rgba(0,0,0,0)),
+      radial-gradient(1.5px 1.5px at 580px 280px, rgba(217, 119, 6, 0.16), rgba(0,0,0,0));
+    background-size: 600px 350px;
+  }
+
+  /* Starfield pattern - Dark Theme (Midnight Navy) */
+  .dark .starfield-bg,
+  html.dark .starfield-bg,
+  body.dark .starfield-bg {
     background-image: 
       radial-gradient(1px 1px at 20px 30px, rgba(255, 255, 255, 0.2), rgba(0,0,0,0)),
       radial-gradient(1.5px 1.5px at 100px 150px, rgba(245, 158, 11, 0.25), rgba(0,0,0,0)),
       radial-gradient(1px 1px at 240px 70px, rgba(255, 255, 255, 0.15), rgba(0,0,0,0)),
       radial-gradient(1.5px 1.5px at 320px 220px, rgba(255, 255, 255, 0.25), rgba(0,0,0,0)),
       radial-gradient(1px 1px at 450px 110px, rgba(255, 255, 255, 0.18), rgba(0,0,0,0)),
-      radial-gradient(1px 1px at 580px 280px, rgba(245, 158, 11, 0.2), rgba(0,0,0,0));
+      radial-gradient(1.5px 1.5px at 580px 280px, rgba(245, 158, 11, 0.2), rgba(0,0,0,0));
     background-size: 600px 350px;
   }
 }
@@ -102,16 +117,24 @@
   body {
     background: white !important;
     color: black !important;
+    font-size: 11pt !important;
   }
-  header, nav, button, .no-print {
+
+  /* Hide interactive UI elements from print */
+  nav, header, button, .no-print, [role="dialog"], .starfield-bg {
     display: none !important;
   }
-  .print-only {
-    display: block !important;
+
+  .print-page-break {
+    page-break-after: always;
   }
-  .card, .border {
-    border: 1px solid #ccc !important;
+
+  .border {
+    border-color: #cbd5e1 !important;
+  }
+
+  .bg-card {
+    background-color: white !important;
     box-shadow: none !important;
-    break-inside: avoid;
   }
 }

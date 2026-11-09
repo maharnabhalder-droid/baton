@@ -10,6 +10,7 @@ import { Counter } from "@/components/counter";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { apiRequest } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
@@ -49,6 +50,7 @@ export default function LandingPage() {
           </Link>
 
           <nav className="flex items-center gap-3">
+            <ThemeToggle />
             <Button variant="ghost" size="sm" asChild className="text-xs">
               <Link href="/login">Log in</Link>
             </Button>

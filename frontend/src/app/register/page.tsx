@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, AlertCircle, ShieldCheck, Lock, User, Mail, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { apiRequest } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
@@ -64,7 +65,10 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-muted/20">
+    <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-muted/20 relative">
+      <div className="absolute top-4 right-4 z-20">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
           <Link href="/" className="inline-flex items-center gap-2">
