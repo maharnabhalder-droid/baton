@@ -23,12 +23,14 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  // Generate CSP Nonce for secure inline script execution
-  const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const isDev = process.env.NODE_ENV === "development";
 
-  // In development, Next.js requires 'unsafe-eval' for Webpack HMR fast refresh and local WebSocket connection.
-  // In production, 'unsafe-eval' is strictly forbidden, and nonces are enforced.
+  // Production CSP:
+  // Next.js App Router relies on inline RSC streaming hydration scripts (self.__next_f).
+  // A dynamic per-request nonce in middleware breaks statically prerendered Next.js pages
+  // because static HTML is generated at build-time without the request nonce.
+  // Using 'self' 'unsafe-inline' (without 'unsafe-eval') delivers robust production security
+  // while allowing Next.js client bundles and React hydration to execute smoothly.
   const cspHeader = isDev
     ? `
       default-src 'self';
@@ -44,11 +46,11 @@ export function middleware(request: NextRequest) {
     `.replace(/\s{2,}/g, " ").trim()
     : `
       default-src 'self';
-      script-src 'self' 'nonce-${nonce}' 'unsafe-inline';
+      script-src 'self' 'unsafe-inline';
       style-src 'self' 'unsafe-inline';
       img-src 'self' blob: data: https:;
       font-src 'self' data: https://fonts.gstatic.com;
-      connect-src 'self';
+      connect-src 'self' https:;
       object-src 'none';
       base-uri 'self';
       form-action 'self';
@@ -57,7 +59,6 @@ export function middleware(request: NextRequest) {
     `.replace(/\s{2,}/g, " ").trim();
 
   const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("Content-Security-Policy", cspHeader);
 
   const response = NextResponse.next({
