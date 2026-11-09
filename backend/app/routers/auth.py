@@ -1,6 +1,7 @@
 import os
 import uuid
 import secrets
+from typing import Optional
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
