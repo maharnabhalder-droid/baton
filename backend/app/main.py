@@ -5,14 +5,15 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from app.config import settings
-from app.database import engine, Base
+from app.database import engine, Base, apply_auto_migrations
 from app.security import limiter
 from app.routers import auth, projects, sources, claims, gaps, handovers, webhooks
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize DB tables
+    # Initialize DB tables & automatically apply schema migrations
     Base.metadata.create_all(bind=engine)
+    apply_auto_migrations(engine)
     yield
 
 app = FastAPI(
