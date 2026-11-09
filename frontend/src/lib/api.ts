@@ -24,15 +24,22 @@ export async function apiRequest<T>(endpoint: string, options: RequestOptions = 
   }
 
   let body = options.body;
+  const isUpload = (options.data && options.data instanceof FormData) || (options.body && options.body instanceof FormData);
   if (options.data && !(options.data instanceof FormData)) {
     headers.set("Content-Type", "application/json");
     body = JSON.stringify(options.data);
   }
 
+  const timeoutMs = isUpload ? 60000 : 15000;
+  const timeoutSignal = typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function"
+    ? AbortSignal.timeout(timeoutMs)
+    : undefined;
+
   const response = await fetch(url, {
     ...options,
     headers,
     body,
+    signal: options.signal || timeoutSignal,
     credentials: "include",
   });
 

@@ -26,6 +26,11 @@ def get_current_user_optional(
         if not user_id:
             return None
         user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            return None
+        token_ver = payload.get("token_version")
+        if token_ver is not None and token_ver != getattr(user, "token_version", 1):
+            return None
         return user
     except Exception:
         return None

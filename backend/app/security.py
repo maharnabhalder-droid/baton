@@ -34,8 +34,11 @@ def get_client_ip(request: Request) -> str:
         return request.client.host
     return "127.0.0.1"
 
-# Rate Limiter
-limiter = Limiter(key_func=get_client_ip)
+# Rate Limiter (shared Redis in production, in-memory fallback for local development)
+limiter = Limiter(
+    key_func=get_client_ip,
+    storage_uri=settings.REDIS_URL if settings.REDIS_URL else "memory://",
+)
 
 # Password Hasher (Argon2id)
 if os.getenv("TESTING") == "1":

@@ -15,6 +15,24 @@ const nextConfig = {
   async headers() {
     return [
       {
+        source: "/dashboard/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-store",
+          },
+        ],
+      },
+      {
+        source: "/projects/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-store",
+          },
+        ],
+      },
+      {
         source: "/(.*)",
         headers: [
           {

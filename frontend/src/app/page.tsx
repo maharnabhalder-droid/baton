@@ -324,6 +324,7 @@ export default function LandingPage() {
             <span className="font-serif font-bold text-foreground">Baton</span> &bull; Evidence-backed knowledge handover
           </div>
           <div className="flex items-center gap-6">
+            <Link href="/privacy" className="hover:text-foreground">Privacy Policy</Link>
             <Link href="/login" className="hover:text-foreground">Log in</Link>
             <Link href="/register" className="hover:text-foreground">Register</Link>
             <button onClick={() => setDemoOpen(true)} className="hover:text-foreground">Interactive Demo</button>

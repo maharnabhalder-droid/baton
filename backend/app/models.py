@@ -24,6 +24,7 @@ class User(Base):
     mfa_enabled = Column(Boolean, default=False, nullable=False)
     needs_password_reset = Column(Boolean, default=False, nullable=False)
     is_demo = Column(Boolean, default=False, nullable=False)
+    token_version = Column(Integer, default=1, nullable=False)
     created_at = Column(DateTime, default=utc_now, nullable=False)
 
     memberships = relationship("ProjectMember", back_populates="user", cascade="all, delete-orphan")
@@ -179,7 +180,7 @@ class AuditLog(Base):
     __tablename__ = "audit_logs"
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
-    user_id = Column(String(36), nullable=False, index=True)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     project_id = Column(String(36), nullable=True, index=True)
     action = Column(String(50), nullable=False)
     resource_type = Column(String(50), nullable=False)

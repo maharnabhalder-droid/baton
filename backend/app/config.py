@@ -15,7 +15,7 @@ class Settings:
         else:
             self.DATABASE_CONNECT_ARGS = {}
 
-        # JWT Secrets - enforce minimum 32 characters
+        # JWT & CSRF Secrets - enforce minimum 32 characters and reject CHANGE_ME
         self.JWT_SECRET: str = os.getenv(
             "JWT_SECRET", 
             "baton_super_secret_jwt_random_signing_key_32_bytes_min!"
@@ -29,14 +29,20 @@ class Settings:
             "baton_super_secret_csrf_signing_key_32_bytes_min!"
         )
         
-        if len(self.JWT_SECRET) < 32:
-            raise RuntimeError("JWT_SECRET must be at least 32 characters long for security.")
-        if len(self.JWT_REFRESH_SECRET) < 32:
-            raise RuntimeError("JWT_REFRESH_SECRET must be at least 32 characters long.")
+        for name, val in [
+            ("JWT_SECRET", self.JWT_SECRET),
+            ("JWT_REFRESH_SECRET", self.JWT_REFRESH_SECRET),
+            ("CSRF_SECRET", self.CSRF_SECRET),
+        ]:
+            if not val or len(val) < 32 or val.startswith("CHANGE_ME"):
+                raise RuntimeError(f"{name} must be set, at least 32 characters long, and cannot start with 'CHANGE_ME'.")
 
         self.JWT_ALGORITHM: str = "HS256"
         self.ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
         self.REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
+        # Rate Limiting Store (Redis for distributed multi-server, empty for in-memory fallback)
+        self.REDIS_URL: str = os.getenv("REDIS_URL", "")
 
         # Origins & CORS
         frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")

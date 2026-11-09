@@ -131,7 +131,12 @@ export function GapCard({ gap, onAnswer }: GapCardProps) {
           </div>
         ) : isAnswering ? (
           <form onSubmit={handleSubmit} className="space-y-2.5 pt-2">
+            <label htmlFor={`gap-answer-${gap.id}`} className="sr-only">
+              Departing member answer or rationale
+            </label>
             <textarea
+              id={`gap-answer-${gap.id}`}
+              aria-label="Departing member answer or rationale"
               required
               rows={3}
               placeholder="State the decision rationale, task owner, or critical contact..."

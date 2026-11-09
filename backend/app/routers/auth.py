@@ -17,13 +17,14 @@ from app.security import (
     get_mfa_provisioning_uri, generate_qr_code_data_uri, verify_totp,
     generate_csrf_token, sanitize_text
 )
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, get_current_user_optional
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 def set_auth_cookies(response: Response, user: User, is_secure: bool = False) -> str:
-    access_token = create_access_token({"sub": user.id, "role": user.role})
-    refresh_token = create_refresh_token({"sub": user.id})
+    ver = getattr(user, "token_version", 1) or 1
+    access_token = create_access_token({"sub": user.id, "role": user.role, "token_version": ver})
+    refresh_token = create_refresh_token({"sub": user.id, "token_version": ver})
     csrf_token = generate_csrf_token()
 
     # Access Token (15m)
@@ -271,6 +272,7 @@ def change_password(
 
     user.hashed_password = hash_password(payload.new_password)
     user.needs_password_reset = False
+    user.token_version = getattr(user, "token_version", 1) + 1
     db.commit()
     return {"message": "Password changed successfully"}
 
@@ -338,12 +340,26 @@ def refresh_token(
             detail="User not found"
         )
 
+    token_ver = payload.get("token_version")
+    if token_ver is not None and token_ver != getattr(user, "token_version", 1):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Session has expired or was revoked"
+        )
+
     is_production = os.getenv("ENVIRONMENT") == "production"
     csrf_token = set_auth_cookies(response, user, is_secure=is_production)
     return {"message": "Token refreshed successfully", "csrf_token": csrf_token}
 
 @router.post("/logout")
-def logout(response: Response):
+def logout(
+    response: Response,
+    user: Optional[User] = Depends(get_current_user_optional),
+    db: Session = Depends(get_db)
+):
+    if user:
+        user.token_version = getattr(user, "token_version", 1) + 1
+        db.commit()
     response.delete_cookie("access_token", path="/")
     response.delete_cookie("refresh_token", path="/api/auth/refresh")
     response.delete_cookie("csrf_token", path="/")

@@ -225,7 +225,12 @@ export function ClaimCard({
 
           {isEditing ? (
             <div className="space-y-2.5" onClick={(e) => e.stopPropagation()}>
+              <label htmlFor={`edit-claim-${claim.id}`} className="sr-only">
+                Edit claim text
+              </label>
               <textarea
+                id={`edit-claim-${claim.id}`}
+                aria-label="Edit claim text"
                 value={editText}
                 onChange={(e) => setEditText(e.target.value)}
                 className="w-full text-xs p-2.5 rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-amber-400"
@@ -233,6 +238,7 @@ export function ClaimCard({
               />
               <div className="flex items-center justify-between">
                 <select
+                  aria-label="Claim status"
                   value={editStatus}
                   onChange={(e) => setEditStatus(e.target.value as any)}
                   className="text-xs p-1.5 rounded-md border border-border bg-background text-foreground"

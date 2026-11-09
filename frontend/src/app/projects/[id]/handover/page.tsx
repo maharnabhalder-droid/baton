@@ -337,10 +337,12 @@ export default function HandoverSummaryPage({
                   As the incoming engineer or designated recipient, acknowledge that you have reviewed the evidence-backed claims, examined identified contradictions, and verified the departing member's stated answers.
                 </p>
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-muted-foreground">
+                  <label htmlFor="handover-notes" className="text-xs font-medium text-muted-foreground">
                     Receipt Notes / Transition Comments (Optional)
                   </label>
                   <textarea
+                    id="handover-notes"
+                    aria-label="Receipt Notes or Transition Comments"
                     rows={2}
                     placeholder="e.g. Reviewed core architecture claims and noted ZeroMQ transition."
                     value={notes}

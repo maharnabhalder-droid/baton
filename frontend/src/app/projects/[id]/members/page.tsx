@@ -205,8 +205,10 @@ export default function MembersPage({
 
           <form onSubmit={handleCreateInvite} className="space-y-3 pt-2">
             <div className="space-y-1">
-              <label className="text-xs font-medium">Assigned Role</label>
+              <label htmlFor="invite-role" className="text-xs font-medium">Assigned Role</label>
               <select
+                id="invite-role"
+                aria-label="Assigned Role"
                 value={inviteRole}
                 onChange={(e) => setInviteRole(e.target.value as any)}
                 className="w-full text-xs p-2 rounded border bg-background text-foreground"
@@ -218,8 +220,10 @@ export default function MembersPage({
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-xs font-medium">Max Uses</label>
+                <label htmlFor="invite-max-uses" className="text-xs font-medium">Max Uses</label>
                 <input
+                  id="invite-max-uses"
+                  aria-label="Max Uses"
                   type="number"
                   min={1}
                   max={50}
@@ -230,8 +234,10 @@ export default function MembersPage({
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-medium">Expires in (Hours)</label>
+                <label htmlFor="invite-expires" className="text-xs font-medium">Expires in (Hours)</label>
                 <input
+                  id="invite-expires"
+                  aria-label="Expires in Hours"
                   type="number"
                   min={1}
                   max={720}

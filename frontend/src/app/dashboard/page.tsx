@@ -194,8 +194,10 @@ export default function DashboardPage() {
 
           <form onSubmit={handleCreateProject} className="space-y-3 pt-2">
             <div className="space-y-1">
-              <label className="text-xs font-medium">Project Name</label>
+              <label htmlFor="project-name" className="text-xs font-medium">Project Name</label>
               <input
+                id="project-name"
+                aria-label="Project Name"
                 required
                 placeholder="e.g. Telemetry Edge Cluster"
                 value={projectName}
@@ -204,8 +206,10 @@ export default function DashboardPage() {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-medium">Description</label>
+              <label htmlFor="project-desc" className="text-xs font-medium">Description</label>
               <textarea
+                id="project-desc"
+                aria-label="Project Description"
                 rows={3}
                 placeholder="High-level architecture, systems being transferred, and key responsibilities..."
                 value={projectDesc}

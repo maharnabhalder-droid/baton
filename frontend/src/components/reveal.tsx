@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
 interface RevealProps {
@@ -17,8 +17,13 @@ export function Reveal({
   className = "",
 }: RevealProps) {
   const shouldReduceMotion = useReducedMotion();
+  const [mounted, setMounted] = useState(false);
 
-  if (shouldReduceMotion) {
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (shouldReduceMotion || !mounted) {
     return <div className={className}>{children}</div>;
   }
 
@@ -33,10 +38,9 @@ export function Reveal({
   return (
     <motion.div
       initial={{ opacity: 0, ...offsets[direction] }}
-      whileInView={{ opacity: 1, x: 0, y: 0 }}
-      viewport={{ once: true, amount: "some" }}
+      animate={{ opacity: 1, x: 0, y: 0 }}
       transition={{
-        duration: 0.5,
+        duration: 0.45,
         delay,
         ease: [0.21, 0.47, 0.32, 0.98],
       }}

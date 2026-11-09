@@ -261,6 +261,7 @@ export default function SourcesPage({
                     <input
                       ref={fileInputRef}
                       type="file"
+                      aria-label="Upload source document file"
                       accept=".md,.txt,.pdf,.docx,.csv,.json"
                       onChange={handleFileSelect}
                       className="hidden"
@@ -303,8 +304,10 @@ export default function SourcesPage({
 
                   {/* Document Title */}
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-muted-foreground">Document Title</label>
+                    <label htmlFor="doc-title" className="text-xs font-medium text-muted-foreground">Document Title</label>
                     <input
+                      id="doc-title"
+                      aria-label="Document Title"
                       required
                       placeholder="e.g. Telemetry Architecture RFC"
                       value={title}
@@ -315,8 +318,10 @@ export default function SourcesPage({
 
                   {/* Author */}
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-muted-foreground">Author / Contributor</label>
+                    <label htmlFor="doc-author" className="text-xs font-medium text-muted-foreground">Author / Contributor</label>
                     <input
+                      id="doc-author"
+                      aria-label="Author / Contributor"
                       required
                       value={author}
                       onChange={(e) => setAuthor(e.target.value)}
@@ -326,8 +331,10 @@ export default function SourcesPage({
 
                   {/* Access Level Selector */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-muted-foreground">Access Clearance Level</label>
+                    <label htmlFor="doc-access-level" className="text-xs font-medium text-muted-foreground">Access Clearance Level</label>
                     <select
+                      id="doc-access-level"
+                      aria-label="Access Clearance Level"
                       value={accessLevel}
                       onChange={(e) => setAccessLevel(e.target.value as any)}
                       className="w-full text-xs p-2.5 rounded-md border border-border/60 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-amber-400"
@@ -359,9 +366,9 @@ export default function SourcesPage({
           {/* Existing Ingested Sources (7 cols) */}
           <div className="lg:col-span-7 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Ingested Sources ({sources.length})
-              </h3>
+              </h2>
               <span className="text-[11px] text-muted-foreground font-mono">
                 {sources.reduce((acc, s) => acc + s.snippets_count, 0)} total verbatim snippets
               </span>

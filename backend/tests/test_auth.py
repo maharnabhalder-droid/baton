@@ -60,6 +60,22 @@ def test_logout_clears_cookies(client, approver_user):
     cookie_headers = [v for k, v in resp.headers.items() if k.lower() == "set-cookie"]
     assert any("access_token=\"\"" in c or "Max-Age=0" in c or "expires=" in c.lower() for c in cookie_headers)
 
+def test_logout_invalidates_copied_token(client, approver_user):
+    """Server-side session invalidation: token copied before logout is rejected afterwards."""
+    cookies, headers = create_auth_headers_and_cookies(approver_user)
+    # 1. Copied token works prior to logout
+    copied_cookies = dict(cookies)
+    me_resp_before = client.get("/api/auth/me", cookies=copied_cookies, headers=headers)
+    assert me_resp_before.status_code == 200
+
+    # 2. Perform logout (bumps token_version on server)
+    logout_resp = client.post("/api/auth/logout", cookies=copied_cookies, headers=headers)
+    assert logout_resp.status_code == 200
+
+    # 3. Subsequent request with pre-logout copied token must be rejected
+    me_resp_after = client.get("/api/auth/me", cookies=copied_cookies, headers=headers)
+    assert me_resp_after.status_code == 401
+
 def test_demo_isolation_and_mfa_exemption(client, db_session):
     # 1. Create a dummy Orbit Robotics project
     proj = Project(name="Orbit Robotics Core Platform", description="Demo Project", owner_id="owner-id")

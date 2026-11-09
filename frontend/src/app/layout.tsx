@@ -34,7 +34,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={`dark ${sans.variable} ${serif.variable} ${mono.variable}`}>
       <body className="min-h-screen bg-background font-sans antialiased text-foreground starfield-bg selection:bg-primary/20 selection:text-primary">
-        <Providers>{children}</Providers>
+        <Providers>
+          <main id="content">{children}</main>
+        </Providers>
       </body>
     </html>
   );

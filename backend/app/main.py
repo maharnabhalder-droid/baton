@@ -45,6 +45,10 @@ async def add_security_headers(request: Request, call_next):
     response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains; preload"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), browsing-topics=()"
+    if request.url.path.startswith("/api") and (
+        "access_token" in request.cookies or "Authorization" in request.headers
+    ):
+        response.headers["Cache-Control"] = "private, no-store"
     return response
 
 # Include Routers

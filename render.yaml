@@ -16,6 +16,11 @@ services:
         fromDatabase:
           name: baton-postgres
           property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: baton-redis
+          property: connectionString
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_REFRESH_SECRET
@@ -29,10 +34,15 @@ services:
       - key: GITHUB_WEBHOOK_SECRET
         generateValue: true
 
+  - type: redis
+    name: baton-redis
+    region: frankfurt
+    plan: starter
+    ipAllowList: [] # internal access only
+
 databases:
   - name: baton-postgres
     plan: starter
     region: frankfurt
     databaseName: baton_db
     user: baton_admin
-
