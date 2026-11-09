@@ -402,7 +402,7 @@ export default function SourcesPage({
                       <div className="flex items-start justify-between gap-4">
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-2">
-                            <h4 className="text-sm font-semibold text-foreground">{s.title}</h4>
+                            <h3 className="text-sm font-semibold text-foreground">{s.title}</h3>
                             <Badge variant="outline" className={`text-[10px] uppercase font-semibold ${badge.class}`}>
                               <Icon className="h-2.5 w-2.5 mr-1" />
                               {badge.label}

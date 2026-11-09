@@ -46,9 +46,13 @@ export async function apiRequest<T>(endpoint: string, options: RequestOptions = 
   if (response.status === 401 && endpoint !== "/api/auth/login" && endpoint !== "/api/auth/refresh" && endpoint !== "/api/auth/register" && endpoint !== "/api/auth/demo") {
     // Attempt token refresh once
     try {
+      const refreshTimeout = typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function"
+        ? AbortSignal.timeout(10000)
+        : undefined;
       const refreshResp = await fetch(isServer ? `${BACKEND_INTERNAL}/api/auth/refresh` : "/api/auth/refresh", {
         method: "POST",
         credentials: "include",
+        signal: refreshTimeout,
       });
       if (refreshResp.ok) {
         return apiRequest<T>(endpoint, options);
