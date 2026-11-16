@@ -20,6 +20,9 @@ import {
   AlertTriangle,
   FileCheck2,
   FolderOpen,
+  Menu,
+  X,
+  Loader2,
 } from "lucide-react";
 
 interface ProjectOption {
@@ -33,6 +36,20 @@ export function Navbar({ projectId }: { projectId?: string }) {
   const [projects, setProjects] = useState<ProjectOption[]>([]);
   const [currentProject, setCurrentProject] = useState<ProjectOption | null>(null);
   const [switcherOpen, setSwitcherOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [serverWaking, setServerWaking] = useState(false);
+
+  useEffect(() => {
+    const handleServerWaking = (e: any) => {
+      setServerWaking(Boolean(e.detail?.waking));
+    };
+    window.addEventListener("baton:server-waking", handleServerWaking);
+    return () => window.removeEventListener("baton:server-waking", handleServerWaking);
+  }, []);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     if (user) {
@@ -56,6 +73,26 @@ export function Navbar({ projectId }: { projectId?: string }) {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/90 backdrop-blur-md">
+      {/* Cold Start Notice Banner */}
+      {serverWaking && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="bg-amber-500/15 border-b border-amber-500/30 text-amber-300 text-xs px-4 py-2 flex items-center justify-between animate-in fade-in"
+        >
+          <div className="flex items-center gap-2">
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-amber-400 shrink-0" />
+            <span>Waking the server, this can take up to a minute on Render cold starts...</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="underline text-amber-200 hover:text-white ml-2 text-xs font-semibold focus:outline-none"
+          >
+            Retry
+          </button>
+        </div>
+      )}
       <div className="container mx-auto flex h-14 items-center justify-between px-4 sm:px-8">
         <div className="flex items-center gap-4 sm:gap-6">
           {/* Logo */}
@@ -165,6 +202,15 @@ export function Navbar({ projectId }: { projectId?: string }) {
                 Gaps
               </Link>
               <Link
+                href={`/projects/${projectId}/radar`}
+                className={`transition-colors hover:text-foreground flex items-center gap-1 ${
+                  pathname.includes("/radar") ? "text-amber-400 font-semibold" : "text-muted-foreground"
+                }`}
+              >
+                <Sparkles className="h-3 w-3 text-amber-400" />
+                Radar
+              </Link>
+              <Link
                 href={`/projects/${projectId}/handover`}
                 className={`transition-colors hover:text-foreground flex items-center gap-1 ${
                   pathname.includes("/handover") ? "text-amber-400 font-semibold" : "text-muted-foreground"
@@ -218,13 +264,161 @@ export function Navbar({ projectId }: { projectId?: string }) {
               onClick={logout}
               title="Logout"
               aria-label="Logout"
-              className="text-muted-foreground hover:text-destructive h-8 w-8"
+              className="text-muted-foreground hover:text-destructive h-9 w-9 min-h-[44px] min-w-[44px]"
             >
               <LogOut className="h-4 w-4" />
             </Button>
           )}
+
+          {/* Mobile Menu Toggle Button */}
+          {projectId && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden text-foreground h-9 w-9 min-h-[44px] min-w-[44px] p-2"
+              aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+              aria-expanded={mobileMenuOpen}
+            >
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+          )}
         </div>
       </div>
+
+      {/* Accessible Mobile Scrollable Tab Strip (Always visible below 1024px when on a project) */}
+      {projectId && (
+        <div className="lg:hidden border-t border-border/40 bg-background/95 backdrop-blur-md overflow-x-auto no-scrollbar scroll-smooth">
+          <nav className="flex items-center gap-1 px-3 py-1 min-w-max text-xs" aria-label="Mobile project navigation">
+            <Link
+              href={`/projects/${projectId}`}
+              className={`inline-flex items-center px-3 py-2.5 min-h-[44px] rounded-md transition-colors ${
+                pathname === `/projects/${projectId}` ? "text-amber-400 font-semibold bg-amber-500/10" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Overview
+            </Link>
+            <Link
+              href={`/projects/${projectId}/sources`}
+              className={`inline-flex items-center gap-1.5 px-3 py-2.5 min-h-[44px] rounded-md transition-colors ${
+                pathname.includes("/sources") ? "text-amber-400 font-semibold bg-amber-500/10" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <FileText className="h-3.5 w-3.5" />
+              Sources
+            </Link>
+            <Link
+              href={`/projects/${projectId}/claims`}
+              className={`inline-flex items-center gap-1.5 px-3 py-2.5 min-h-[44px] rounded-md transition-colors ${
+                pathname.includes("/claims") ? "text-amber-400 font-semibold bg-amber-500/10" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              Claims
+            </Link>
+            <Link
+              href={`/projects/${projectId}/gaps`}
+              className={`inline-flex items-center gap-1.5 px-3 py-2.5 min-h-[44px] rounded-md transition-colors ${
+                pathname.includes("/gaps") ? "text-amber-400 font-semibold bg-amber-500/10" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <AlertTriangle className="h-3.5 w-3.5" />
+              Gaps
+            </Link>
+            <Link
+              href={`/projects/${projectId}/radar`}
+              className={`inline-flex items-center gap-1.5 px-3 py-2.5 min-h-[44px] rounded-md transition-colors ${
+                pathname.includes("/radar") ? "text-amber-400 font-semibold bg-amber-500/10" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+              Radar
+            </Link>
+            <Link
+              href={`/projects/${projectId}/handover`}
+              className={`inline-flex items-center gap-1.5 px-3 py-2.5 min-h-[44px] rounded-md transition-colors ${
+                pathname.includes("/handover") ? "text-amber-400 font-semibold bg-amber-500/10" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <FileCheck2 className="h-3.5 w-3.5" />
+              Handover
+            </Link>
+            <Link
+              href={`/projects/${projectId}/members`}
+              className={`inline-flex items-center gap-1.5 px-3 py-2.5 min-h-[44px] rounded-md transition-colors ${
+                pathname.includes("/members") ? "text-amber-400 font-semibold bg-amber-500/10" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Users className="h-3.5 w-3.5" />
+              Team
+            </Link>
+          </nav>
+        </div>
+      )}
+
+      {/* Accessible Mobile Full Menu Overlay */}
+      {projectId && mobileMenuOpen && (
+        <div className="lg:hidden border-t border-border/60 bg-popover/95 backdrop-blur-md px-4 py-3 space-y-1 animate-in slide-in-from-top-2">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-2 py-1">
+            Project Navigation
+          </div>
+          <Link
+            href={`/projects/${projectId}`}
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center gap-2 px-3 py-2.5 min-h-[44px] rounded-md text-sm text-foreground hover:bg-muted font-medium"
+          >
+            Overview
+          </Link>
+          <Link
+            href={`/projects/${projectId}/sources`}
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center gap-2 px-3 py-2.5 min-h-[44px] rounded-md text-sm text-foreground hover:bg-muted font-medium"
+          >
+            <FileText className="h-4 w-4 text-amber-400" />
+            Sources
+          </Link>
+          <Link
+            href={`/projects/${projectId}/claims`}
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center gap-2 px-3 py-2.5 min-h-[44px] rounded-md text-sm text-foreground hover:bg-muted font-medium"
+          >
+            <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+            Claims & Review
+          </Link>
+          <Link
+            href={`/projects/${projectId}/gaps`}
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center gap-2 px-3 py-2.5 min-h-[44px] rounded-md text-sm text-foreground hover:bg-muted font-medium"
+          >
+            <AlertTriangle className="h-4 w-4 text-rose-400" />
+            Gaps Checklist
+          </Link>
+          <Link
+            href={`/projects/${projectId}/radar`}
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center gap-2 px-3 py-2.5 min-h-[44px] rounded-md text-sm text-foreground hover:bg-muted font-medium"
+          >
+            <Sparkles className="h-4 w-4 text-amber-400" />
+            Bus-Factor Radar
+          </Link>
+          <Link
+            href={`/projects/${projectId}/handover`}
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center gap-2 px-3 py-2.5 min-h-[44px] rounded-md text-sm text-foreground hover:bg-muted font-medium"
+          >
+            <FileCheck2 className="h-4 w-4 text-blue-400" />
+            Handover Summary
+          </Link>
+          <Link
+            href={`/projects/${projectId}/members`}
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center gap-2 px-3 py-2.5 min-h-[44px] rounded-md text-sm text-foreground hover:bg-muted font-medium"
+          >
+            <Users className="h-4 w-4 text-purple-400" />
+            Team & Invites
+          </Link>
+        </div>
+      )}
     </header>
   );
 }

@@ -7,13 +7,17 @@ from slowapi.errors import RateLimitExceeded
 from app.config import settings
 from app.database import engine, Base, apply_auto_migrations
 from app.security import limiter
-from app.routers import auth, projects, sources, claims, gaps, handovers, webhooks
+from app.routers import auth, projects, sources, claims, gaps, handovers, rehearsals, radar, access_requests, webhooks
+from migrate import run_migrations, check_rls_status
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Initialize DB tables & automatically apply schema migrations
     Base.metadata.create_all(bind=engine)
     apply_auto_migrations(engine)
+    run_migrations(engine)
+    rls_info = check_rls_status(engine)
+    print(f"[STARTUP] Database: {engine.dialect.name} | RLS Status: {rls_info.get('note', '')}")
     yield
 
 app = FastAPI(
@@ -45,7 +49,7 @@ async def add_security_headers(request: Request, call_next):
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains; preload"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), browsing-topics=()"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(self), geolocation=(), browsing-topics=()"
     if request.url.path.startswith("/api") and (
         "access_token" in request.cookies or "Authorization" in request.headers
     ):
@@ -59,9 +63,44 @@ app.include_router(sources.router)
 app.include_router(claims.router)
 app.include_router(gaps.router)
 app.include_router(handovers.router)
+app.include_router(rehearsals.router)
+app.include_router(radar.router)
+app.include_router(access_requests.router)
 app.include_router(webhooks.router)
 
+from sqlalchemy import text
+from fastapi import Depends, HTTPException, status
+from app.dependencies import get_current_user
+from app.models import User
+
 @app.get("/healthz")
-def healthz():
-    return {"status": "healthy", "service": "baton-api"}
+def healthz(response: Response):
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        return {"status": "healthy"}
+    except Exception:
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        return {"status": "unhealthy"}
+
+@app.get("/api/admin/health")
+def admin_health(
+    user: User = Depends(get_current_user)
+):
+    """
+    Approver-only health endpoint providing detailed database dialect and RLS table maps.
+    Never exposed to unauthenticated users or lower roles.
+    """
+    if user.role != "approver":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: approver role required to inspect internal database and RLS state"
+        )
+    rls_info = check_rls_status(engine)
+    return {
+        "status": "healthy",
+        "service": "baton-api",
+        "database": engine.dialect.name,
+        "rls": rls_info
+    }
 

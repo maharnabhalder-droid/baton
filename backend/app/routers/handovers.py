@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
 from app.models import (
-    Source, Snippet, Claim, ClaimCitation, Gap, HandoverAck, AuditLog
+    Source, Snippet, Claim, ClaimCitation, Gap, HandoverAck, RehearsalAttempt, AuditLog
 )
 from app.schemas import (
     HandoverAckRequest, HandoverAckResponse, HandoverSummaryResponse
@@ -78,12 +78,84 @@ def acknowledge_handover(
 ):
     """
     Receipt acknowledgement by the incoming user (or approver).
+    Enforces rehearsal completion if approved claims exist for the project.
     """
-    clean_notes = sanitize_text(payload.notes)
+    clean_notes = sanitize_text(payload.notes) if payload.notes else ""
+
+    # Check if project has visible approved claims
+    approved_claims = (
+        db.query(Claim)
+        .options(joinedload(Claim.citations).joinedload(ClaimCitation.snippet))
+        .filter(Claim.project_id == ctx.project.id, Claim.review_status == "approved")
+        .all()
+    )
+    visible_approved = []
+    for c in approved_claims:
+        if all(cit.snippet and can_user_view_access_level(ctx.role, cit.snippet.access_level) for cit in c.citations):
+            visible_approved.append(c)
+
+    # Verify caller's own RehearsalAttempt server-side
+    rehearsal = None
+    if payload.rehearsal_attempt_id:
+        rehearsal = (
+            db.query(RehearsalAttempt)
+            .filter(
+                RehearsalAttempt.id == payload.rehearsal_attempt_id,
+                RehearsalAttempt.project_id == ctx.project.id,
+                RehearsalAttempt.user_id == ctx.user.id
+            )
+            .first()
+        )
+        if not rehearsal:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Rehearsal attempt not found or does not belong to you."
+            )
+    else:
+        rehearsal = (
+            db.query(RehearsalAttempt)
+            .filter(
+                RehearsalAttempt.project_id == ctx.project.id,
+                RehearsalAttempt.user_id == ctx.user.id
+            )
+            .order_by(RehearsalAttempt.created_at.desc())
+            .first()
+        )
+
+    # Gate: If visible approved claims exist and user is incoming role, require a passing rehearsal attempt
+    if visible_approved and ctx.role == "incoming":
+        if not rehearsal:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Handover Rehearsal required: incoming engineers must complete scenario questions on approved claims before acknowledging receipt."
+            )
+        if not rehearsal.passed:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Handover Rehearsal not passed: incoming engineers must achieve a passing score (>=70%) on scenario questions before acknowledging receipt. Please retake the rehearsal."
+            )
+
+    # Security: Ignore any client-supplied score, time_taken_seconds, or missed_topics
+    score = rehearsal.score if rehearsal else None
+    time_taken = rehearsal.time_taken_seconds if rehearsal else None
+    missed_topics_str = rehearsal.weak_topics if (rehearsal and rehearsal.weak_topics) else None
+
+    completed_rehearsal = rehearsal is not None and rehearsal.passed
+
+    if not visible_approved and not completed_rehearsal:
+        if not clean_notes:
+            clean_notes = "Rehearsal skipped: no approved claims available to test."
+        elif "Rehearsal" not in clean_notes:
+            clean_notes += " [Rehearsal skipped: no approved claims available]"
+
     ack = HandoverAck(
         project_id=ctx.project.id,
         user_id=ctx.user.id,
-        notes=clean_notes
+        notes=clean_notes,
+        score=score,
+        missed_topics=missed_topics_str,
+        time_taken_seconds=time_taken,
+        completed_rehearsal=completed_rehearsal
     )
     db.add(ack)
 

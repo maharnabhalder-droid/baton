@@ -124,6 +124,7 @@ export default function RegisterPage() {
                   <input
                     id="email"
                     type="email"
+                    autoComplete="username"
                     required
                     placeholder="elena@orbitrobotics.io"
                     value={email}
@@ -142,6 +143,7 @@ export default function RegisterPage() {
                   <input
                     id="password"
                     type="password"
+                    autoComplete="new-password"
                     required
                     minLength={12}
                     placeholder="••••••••••••••••"

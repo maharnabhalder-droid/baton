@@ -13,11 +13,26 @@ export interface User {
   is_demo: boolean;
 }
 
+export function clearBatonSessionStorage() {
+  if (typeof window === "undefined") return;
+  try {
+    const toRemove: string[] = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i);
+      if (key && key.startsWith("baton_")) {
+        toRemove.push(key);
+      }
+    }
+    toRemove.forEach((k) => sessionStorage.removeItem(k));
+  } catch {}
+}
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   refreshUser: () => Promise<void>;
   logout: () => Promise<void>;
+  tryDemo: (role: "approver" | "incoming" | "restricted") => Promise<{ project_id: string; message: string }>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -25,6 +40,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   refreshUser: async () => {},
   logout: async () => {},
+  tryDemo: async () => ({ project_id: "", message: "" }),
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -50,6 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await apiRequest("/api/auth/logout", { method: "POST" });
     } finally {
+      clearBatonSessionStorage();
       setUser(null);
       if (typeof window !== "undefined") {
         window.location.href = "/";
@@ -57,8 +74,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const tryDemo = async (role: "approver" | "incoming" | "restricted") => {
+    clearBatonSessionStorage();
+    const res = await apiRequest<{ project_id: string; message: string }>("/api/auth/demo", {
+      method: "POST",
+      data: { role },
+    });
+    await fetchUser();
+    return res;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, refreshUser: fetchUser, logout }}>
+    <AuthContext.Provider value={{ user, loading, refreshUser: fetchUser, logout, tryDemo }}>
       {children}
     </AuthContext.Provider>
   );

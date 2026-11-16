@@ -155,6 +155,8 @@ class ClaimResponse(BaseModel):
     review_status: str  # pending, approved, rejected
     citations: List[CitationResponse] = []
     history: List[ClaimHistoryResponse] = []
+    is_redacted: bool = False
+    restricted_count: Optional[int] = None
     created_at: datetime
     updated_at: datetime
 
@@ -192,6 +194,10 @@ class GapAnswerRequest(BaseModel):
 # Handover
 class HandoverAckRequest(BaseModel):
     notes: Optional[str] = None
+    score: Optional[float] = None
+    missed_topics: Optional[List[str]] = None
+    time_taken_seconds: Optional[int] = None
+    rehearsal_attempt_id: Optional[str] = None
 
 class HandoverAckResponse(BaseModel):
     id: str
@@ -199,6 +205,86 @@ class HandoverAckResponse(BaseModel):
     user_id: str
     acknowledged_at: datetime
     notes: Optional[str]
+    score: Optional[float] = None
+    missed_topics: Optional[str] = None
+    time_taken_seconds: Optional[int] = None
+    completed_rehearsal: bool = False
+
+    class Config:
+        from_attributes = True
+
+# Rehearsal Schemas
+class RehearsalQuestion(BaseModel):
+    id: str
+    scenario: str
+    claim_ids: List[str]
+    category: str = "technical"
+    guidance: Optional[str] = None
+
+class RehearsalGenerateResponse(BaseModel):
+    project_id: str
+    attempt_id: str
+    questions: List[RehearsalQuestion]
+    status: str = "ready"  # ready | unavailable_no_claims | fallback_active
+    message: Optional[str] = None
+
+class RehearsalAnswerItem(BaseModel):
+    question_id: str
+    answer_text: str
+
+class RehearsalSubmitRequest(BaseModel):
+    attempt_id: str
+    answers: List[RehearsalAnswerItem]
+    time_taken_seconds: int = 0
+
+class QuestionGrade(BaseModel):
+    question_id: str
+    score: float  # 0.0 to 1.0
+    passed: bool
+    feedback: str
+    claim_ids: List[str]
+    topic: str
+
+class RehearsalResultResponse(BaseModel):
+    attempt_id: str
+    score: float
+    passed: bool
+    total_questions: int
+    correct_count: int
+    weak_topics: List[str]
+    grades: List[QuestionGrade]
+    time_taken_seconds: int
+
+class WeakTopicItem(BaseModel):
+    attempt_id: str
+    user_id: str
+    user_name: Optional[str] = None
+    topic: str
+    question_scenario: str
+    claim_ids: List[str]
+    submitted_answer: Optional[str] = None
+    feedback: Optional[str] = None
+    created_at: datetime
+
+# Access Request Schemas
+class AccessRequestCreate(BaseModel):
+    claim_id: Optional[str] = None
+    category: str = "restricted"
+    reason: Optional[str] = Field(default=None, max_length=500)
+
+class AccessRequestResponse(BaseModel):
+    id: str
+    project_id: str
+    user_id: str
+    user_name: Optional[str] = None
+    user_email: Optional[str] = None
+    claim_id: Optional[str] = None
+    category: str
+    reason: Optional[str] = None
+    status: str
+    created_at: datetime
+    resolved_at: Optional[datetime] = None
+    resolved_by: Optional[str] = None
 
     class Config:
         from_attributes = True

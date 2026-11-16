@@ -158,10 +158,30 @@ def seed_orbit_robotics():
             Snippet(
                 source_id=source_rfc.id,
                 project_id=project.id,
-                content="Hardware-in-the-loop CI runner suffers from recurring build failure and flaky race condition during camera packet simulation.",
+                content="Hardware-in-the-loop CI runner suffers from recurring build failure and flaky race condition during camera packet simulation, failing 4 out of 5 daily release runs.",
                 location="lines 45-48",
                 author="Elena Vance",
                 timestamp="2026-08-10 10:15 UTC",
+                access_level="public"
+            ),
+            # TRAP 6: Approaching deadline pressure
+            Snippet(
+                source_id=source_tasks.id,
+                project_id=project.id,
+                content="Critical flight readiness review deadline scheduled for December 15, 2026. All rover telemetry safety audits must be finalized.",
+                location="lines 18-20",
+                author="Elena Vance",
+                timestamp="2026-09-22 11:00 UTC",
+                access_level="team"
+            ),
+            # TRAP 7: Unowned external dependency
+            Snippet(
+                source_id=source_rfc.id,
+                project_id=project.id,
+                content="Telemetry pipeline relies on Datadog for production monitoring with no vendor contact, rep, or designated account owner assigned.",
+                location="lines 62-64",
+                author="Elena Vance",
+                timestamp="2026-08-10 11:30 UTC",
                 access_level="public"
             ),
             # TRAP 4: Decision with NO reason
@@ -221,7 +241,9 @@ def seed_orbit_robotics():
         ]
         claims_data = run_claim_pipeline(snippets_payload)
 
-        for cdata in claims_data:
+        for idx, cdata in enumerate(claims_data):
+            # Approve the first 2 non-conflicting claims so Rehearsal is ready out of the box
+            initial_review = "approved" if (idx < 2 and cdata.get("status") != "Conflicting") else "pending"
             claim = Claim(
                 project_id=project.id,
                 claim_text=cdata["claim_text"],
@@ -229,7 +251,7 @@ def seed_orbit_robotics():
                 category=cdata.get("category", "technical"),
                 confidence=cdata.get("confidence", 0.95),
                 created_by=approver.id,
-                review_status="pending"
+                review_status=initial_review
             )
             db.add(claim)
             db.flush()

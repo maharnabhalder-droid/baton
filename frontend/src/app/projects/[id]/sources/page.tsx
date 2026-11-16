@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useState, useRef } from "react";
+import { use, useEffect, useState, useRef, useCallback } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { apiRequest } from "@/lib/api";
 import { Navbar } from "@/components/navbar";
@@ -58,21 +58,21 @@ export default function SourcesPage({
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const fetchSources = () => {
+  const showToast = useCallback((type: "success" | "error", text: string) => {
+    setToastMessage({ type, text });
+    setTimeout(() => setToastMessage(null), 4000);
+  }, []);
+
+  const fetchSources = useCallback(() => {
     apiRequest<SourceItem[]>(`/api/projects/${projectId}/sources`)
       .then(setSources)
       .catch((err) => showToast("error", `Failed to load sources: ${err.message}`))
       .finally(() => setLoading(false));
-  };
+  }, [projectId, showToast]);
 
   useEffect(() => {
     fetchSources();
-  }, [projectId]);
-
-  const showToast = (type: "success" | "error", text: string) => {
-    setToastMessage({ type, text });
-    setTimeout(() => setToastMessage(null), 4000);
-  };
+  }, [fetchSources]);
 
   const handleFileDrop = (e: React.DragEvent) => {
     e.preventDefault();

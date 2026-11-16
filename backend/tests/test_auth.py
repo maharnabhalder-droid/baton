@@ -127,14 +127,54 @@ def test_mfa_setup_and_verification(client, approver_user, db_session):
     db_session.refresh(approver_user)
     assert approver_user.mfa_enabled is True
 
-def test_csrf_protection_on_state_change(client, approver_user):
+def test_csrf_protection_on_state_change(client, approver_user, db_session):
     cookies, headers = create_auth_headers_and_cookies(approver_user)
     bad_headers = {}
-    resp = client.post(
+
+    # 1. POST /api/projects without CSRF
+    resp_proj = client.post(
         "/api/projects",
         json={"name": "Attacker Project", "description": "CSRF exploit"},
         cookies=cookies,
         headers=bad_headers
     )
-    assert resp.status_code == 403
-    assert "CSRF" in resp.json()["detail"]
+    assert resp_proj.status_code == 403
+    assert "CSRF" in resp_proj.json()["detail"]
+
+    # 2. POST /api/auth/change-password without CSRF
+    resp_pwd = client.post(
+        "/api/auth/change-password",
+        json={"current_password": "Password123456!", "new_password": "NewPassword123456!"},
+        cookies=cookies,
+        headers=bad_headers
+    )
+    assert resp_pwd.status_code == 403
+    assert "CSRF" in resp_pwd.json()["detail"]
+
+    # 3. POST /api/auth/mfa/setup without CSRF
+    resp_mfa = client.post(
+        "/api/auth/mfa/setup",
+        cookies=cookies,
+        headers=bad_headers
+    )
+    assert resp_mfa.status_code == 403
+    assert "CSRF" in resp_mfa.json()["detail"]
+
+    # 4. POST /api/projects/{id}/sources/upload without CSRF
+    from app.models import Project, ProjectMember
+    proj = Project(name="Upload CSRF Project", description="Test", owner_id=approver_user.id)
+    db_session.add(proj)
+    db_session.flush()
+    mem = ProjectMember(project_id=proj.id, user_id=approver_user.id, role="approver")
+    db_session.add(mem)
+    db_session.commit()
+
+    resp_up = client.post(
+        f"/api/projects/{proj.id}/sources/upload",
+        files={"file": ("csrf_test.txt", b"exploit payload", "text/plain")},
+        data={"title": "CSRF upload", "access_level": "team", "author": approver_user.name},
+        cookies=cookies,
+        headers=bad_headers
+    )
+    assert resp_up.status_code == 403
+    assert "CSRF" in resp_up.json()["detail"]

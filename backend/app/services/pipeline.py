@@ -71,7 +71,7 @@ def extract_claims_with_gemini(snippets: List[Dict[str, Any]]) -> List[Dict[str,
 
 def extract_claims_fallback(snippets: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
-    Deterministic rule-based extractor that guarantees verbatim quotes
+    Deterministic rule-based extractor ensuring verbatim quotes
     from the snippets for local development, offline runs, and unit tests.
     """
     extracted_claims = []

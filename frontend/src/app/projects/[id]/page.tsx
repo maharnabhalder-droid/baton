@@ -56,7 +56,7 @@ export default function ProjectOverviewPage({
         <Navbar projectId={projectId} />
         <div className="container mx-auto p-8 space-y-4">
           <Skeleton className="h-8 w-64" />
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Skeleton className="h-24 w-full" />
             <Skeleton className="h-24 w-full" />
             <Skeleton className="h-24 w-full" />
@@ -126,56 +126,89 @@ export default function ProjectOverviewPage({
         </div>
 
         {/* Action Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-          <Card className="border-border/60 bg-card/60 hover:border-amber-400/40 transition-colors">
-            <CardHeader className="p-5 pb-3">
-              <CardTitle className="text-base font-serif font-bold flex items-center gap-2 text-foreground">
-                <FileText className="h-4 w-4 text-amber-400" />
-                Upload & Ingest Sources
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-5 pt-0 space-y-3">
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Add markdown, chat exports, PDFs, or CSVs with explicit role access levels (public, team, restricted).
-              </p>
-              <Button asChild size="sm" variant="outline" className="w-full text-xs border-border/60">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-2">
+          <Card className="border-border/60 bg-card/60 hover:border-amber-400/40 transition-colors flex flex-col justify-between">
+            <div>
+              <CardHeader className="p-5 pb-3">
+                <CardTitle className="text-base font-serif font-bold flex items-center gap-2 text-foreground">
+                  <FileText className="h-4 w-4 text-amber-400" />
+                  Upload & Ingest Sources
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-5 pt-0">
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Add markdown, chat exports, PDFs, or CSVs with explicit role access levels (public, team, restricted).
+                </p>
+              </CardContent>
+            </div>
+            <div className="p-5 pt-0">
+              <Button asChild size="sm" variant="outline" className="w-full text-xs border-border/60 min-h-[44px]">
                 <Link href={`/projects/${projectId}/sources`}>Manage Sources</Link>
               </Button>
-            </CardContent>
+            </div>
           </Card>
 
-          <Card className="border-border/60 bg-card/60 hover:border-amber-400/40 transition-colors">
-            <CardHeader className="p-5 pb-3">
-              <CardTitle className="text-base font-serif font-bold flex items-center gap-2 text-foreground">
-                <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                Claims & Review Panel
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-5 pt-0 space-y-3">
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Review claims, inspect verbatim cited snippets, detect contradictions, and approve with revision history.
-              </p>
-              <Button asChild size="sm" className="w-full text-xs bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold">
+          <Card className="border-border/60 bg-card/60 hover:border-amber-400/40 transition-colors flex flex-col justify-between">
+            <div>
+              <CardHeader className="p-5 pb-3">
+                <CardTitle className="text-base font-serif font-bold flex items-center gap-2 text-foreground">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                  Claims & Review Panel
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-5 pt-0">
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Review claims, inspect verbatim cited snippets, detect contradictions, and approve with revision history.
+                </p>
+              </CardContent>
+            </div>
+            <div className="p-5 pt-0">
+              <Button asChild size="sm" className="w-full text-xs bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold min-h-[44px]">
                 <Link href={`/projects/${projectId}/claims`}>Open Review Screen</Link>
               </Button>
-            </CardContent>
+            </div>
           </Card>
 
-          <Card className="border-border/60 bg-card/60 hover:border-amber-400/40 transition-colors">
-            <CardHeader className="p-5 pb-3">
-              <CardTitle className="text-base font-serif font-bold flex items-center gap-2 text-foreground">
-                <AlertTriangle className="h-4 w-4 text-rose-400" />
-                Knowledge Gap Checklist
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-5 pt-0 space-y-3">
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Identify unreasoned decisions, orphan tasks, and unassigned dependencies. Answer to record evidence.
-              </p>
-              <Button asChild size="sm" variant="outline" className="w-full text-xs border-border/60">
+          <Card className="border-border/60 bg-card/60 hover:border-amber-400/40 transition-colors flex flex-col justify-between">
+            <div>
+              <CardHeader className="p-5 pb-3">
+                <CardTitle className="text-base font-serif font-bold flex items-center gap-2 text-foreground">
+                  <AlertTriangle className="h-4 w-4 text-rose-400" />
+                  Knowledge Gap Checklist
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-5 pt-0">
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Identify unreasoned decisions, orphan tasks, and unassigned dependencies. Answer to record evidence.
+                </p>
+              </CardContent>
+            </div>
+            <div className="p-5 pt-0">
+              <Button asChild size="sm" variant="outline" className="w-full text-xs border-border/60 min-h-[44px]">
                 <Link href={`/projects/${projectId}/gaps`}>Resolve Gaps</Link>
               </Button>
-            </CardContent>
+            </div>
+          </Card>
+
+          <Card className="border-border/60 bg-card/60 hover:border-amber-400/40 transition-colors flex flex-col justify-between">
+            <div>
+              <CardHeader className="p-5 pb-3">
+                <CardTitle className="text-base font-serif font-bold flex items-center gap-2 text-foreground">
+                  <Sparkles className="h-4 w-4 text-amber-400" />
+                  Bus-Factor Radar
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-5 pt-0">
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Interactive 4-axis knowledge topology: unowned components, single-author silos, unverified claims, and unreviewed decisions.
+                </p>
+              </CardContent>
+            </div>
+            <div className="p-5 pt-0">
+              <Button asChild size="sm" variant="outline" className="w-full text-xs border-border/60 min-h-[44px]">
+                <Link href={`/projects/${projectId}/radar`}>Inspect Radar</Link>
+              </Button>
+            </div>
           </Card>
         </div>
       </main>

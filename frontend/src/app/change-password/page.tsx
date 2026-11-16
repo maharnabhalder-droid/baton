@@ -86,6 +86,7 @@ export default function ChangePasswordPage() {
                 <input
                   id="current"
                   type="password"
+                  autoComplete="current-password"
                   required
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
@@ -100,6 +101,7 @@ export default function ChangePasswordPage() {
                 <input
                   id="new"
                   type="password"
+                  autoComplete="new-password"
                   required
                   minLength={12}
                   value={newPassword}

@@ -16,18 +16,14 @@ import { useAuth } from "@/lib/auth-context";
 
 export default function LandingPage() {
   const router = useRouter();
-  const { refreshUser } = useAuth();
+  const { tryDemo } = useAuth();
   const [demoOpen, setDemoOpen] = useState(false);
   const [demoLoading, setDemoLoading] = useState(false);
 
   const startDemo = async (role: "approver" | "incoming" | "restricted") => {
     setDemoLoading(true);
     try {
-      const res = await apiRequest<{ project_id: string; message: string }>("/api/auth/demo", {
-        method: "POST",
-        data: { role },
-      });
-      await refreshUser();
+      const res = await tryDemo(role);
       router.push(`/projects/${res.project_id}/claims`);
     } catch (err: any) {
       alert(`Demo creation failed: ${err.message}`);
@@ -384,7 +380,7 @@ export default function LandingPage() {
                 <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-slate-500/20 text-slate-400">Public Only</span>
               </div>
               <p className="text-xs text-muted-foreground">
-                Permitted to see only claims where 100% of the cited snippets are classified public. Team internals remain invisible.
+                Permitted to see only claims where all cited snippets are classified public. Team internals remain invisible.
               </p>
             </button>
           </div>

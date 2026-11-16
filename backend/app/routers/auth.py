@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.config import settings
 from app.models import User, Project, ProjectMember, ProjectInvite, AuditLog
 from app.schemas import (
     UserRegister, UserLogin, UserResponse, MFASetupResponse, MFAVerifyRequest,
@@ -18,7 +19,7 @@ from app.security import (
     get_mfa_provisioning_uri, generate_qr_code_data_uri, verify_totp,
     generate_csrf_token, sanitize_text
 )
-from app.dependencies import get_current_user, get_current_user_optional
+from app.dependencies import get_current_user, get_current_user_optional, require_csrf
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -128,8 +129,7 @@ def register(
     db.commit()
     db.refresh(user)
 
-    is_production = os.getenv("ENVIRONMENT") == "production"
-    set_auth_cookies(response, user, is_secure=is_production)
+    set_auth_cookies(response, user, is_secure=settings.COOKIE_SECURE)
     return user
 
 @router.post("/login")
@@ -157,8 +157,7 @@ def login(
                 detail="MFA verification required for approver role"
             )
 
-    is_production = os.getenv("ENVIRONMENT") == "production"
-    csrf_token = set_auth_cookies(response, user, is_secure=is_production)
+    csrf_token = set_auth_cookies(response, user, is_secure=settings.COOKIE_SECURE)
 
     audit = AuditLog(
         user_id=user.id,
@@ -235,8 +234,7 @@ def try_demo(
     db.commit()
     db.refresh(demo_user)
 
-    is_production = os.getenv("ENVIRONMENT") == "production"
-    csrf_token = set_auth_cookies(response, demo_user, is_secure=is_production)
+    csrf_token = set_auth_cookies(response, demo_user, is_secure=settings.COOKIE_SECURE)
 
     return {
         "message": "Demo session initialized",
@@ -253,7 +251,7 @@ def try_demo(
         "csrf_token": csrf_token
     }
 
-@router.post("/change-password")
+@router.post("/change-password", dependencies=[Depends(require_csrf)])
 def change_password(
     payload: PasswordChangeRequest,
     user: User = Depends(get_current_user),
@@ -277,7 +275,7 @@ def change_password(
     db.commit()
     return {"message": "Password changed successfully"}
 
-@router.post("/mfa/setup", response_model=MFASetupResponse)
+@router.post("/mfa/setup", response_model=MFASetupResponse, dependencies=[Depends(require_csrf)])
 def setup_mfa(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -295,7 +293,7 @@ def setup_mfa(
         qr_data_uri=qr_data_uri
     )
 
-@router.post("/mfa/verify")
+@router.post("/mfa/verify", dependencies=[Depends(require_csrf)])
 @limiter.limit("5/minute")
 def verify_mfa(
     request: Request,
@@ -348,8 +346,7 @@ def refresh_token(
             detail="Session has expired or was revoked"
         )
 
-    is_production = os.getenv("ENVIRONMENT") == "production"
-    csrf_token = set_auth_cookies(response, user, is_secure=is_production)
+    csrf_token = set_auth_cookies(response, user, is_secure=settings.COOKIE_SECURE)
     return {"message": "Token refreshed successfully", "csrf_token": csrf_token}
 
 @router.post("/logout")

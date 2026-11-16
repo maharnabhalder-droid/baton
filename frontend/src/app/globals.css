@@ -14,28 +14,28 @@
     
     /* Warm Amber Baton accent */
     --primary: 38 92% 46%;
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: 224 50% 6%;
     
     --secondary: 215 25% 92%;
     --secondary-foreground: 222 47% 12%;
     --muted: 215 25% 92%;
-    --muted-foreground: 218 16% 42%;
+    --muted-foreground: 218 18% 36%;
     --accent: 38 92% 94%;
-    --accent-foreground: 38 92% 32%;
+    --accent-foreground: 38 92% 28%;
     
     --destructive: 0 84% 56%;
     --destructive-foreground: 0 0% 98%;
     
-    --border: 215 25% 87%;
-    --input: 215 25% 87%;
+    --border: 215 25% 82%;
+    --input: 215 25% 58%;
     --ring: 38 92% 46%;
     --radius: 0.6rem;
 
-    /* Constellation Status Colors (Light Theme) */
-    --status-verified: 158 64% 38%;
-    --status-inferred: 38 92% 44%;
-    --status-conflicting: 0 84% 55%;
-    --status-missing: 215 16% 45%;
+    /* Constellation Status Colors (Light Theme - WCAG AA >= 4.5:1 on light surfaces) */
+    --status-verified: 158 64% 32%;
+    --status-inferred: 38 92% 32%;
+    --status-conflicting: 0 84% 45%;
+    --status-missing: 215 20% 36%;
   }
 
   .dark {
@@ -83,6 +83,18 @@
     min-height: 100vh;
     position: relative;
     transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  /* Global Reduced Motion Compliance */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 
   /* Subtle celestial starfield background pattern - Light Theme (Dawn) */

@@ -37,6 +37,22 @@ def apply_auto_migrations(target_engine):
                     conn.execute(text("ALTER TABLE users ADD COLUMN mfa_enabled BOOLEAN DEFAULT 0;"))
                 if "mfa_secret" not in columns:
                     conn.execute(text("ALTER TABLE users ADD COLUMN mfa_secret VARCHAR(64);"))
+
+            if "sources" in tables:
+                columns = {c["name"] for c in inspector.get_columns("sources")}
+                if "redact_pii" not in columns:
+                    conn.execute(text("ALTER TABLE sources ADD COLUMN redact_pii BOOLEAN DEFAULT 0;"))
+
+            if "handover_acks" in tables:
+                columns = {c["name"] for c in inspector.get_columns("handover_acks")}
+                if "score" not in columns:
+                    conn.execute(text("ALTER TABLE handover_acks ADD COLUMN score FLOAT;"))
+                if "missed_topics" not in columns:
+                    conn.execute(text("ALTER TABLE handover_acks ADD COLUMN missed_topics TEXT;"))
+                if "time_taken_seconds" not in columns:
+                    conn.execute(text("ALTER TABLE handover_acks ADD COLUMN time_taken_seconds INTEGER;"))
+                if "completed_rehearsal" not in columns:
+                    conn.execute(text("ALTER TABLE handover_acks ADD COLUMN completed_rehearsal BOOLEAN DEFAULT 0;"))
     except Exception as e:
         print(f"[AutoMigration] Warning: Schema evolution check encountered: {e}")
 

@@ -12,20 +12,23 @@ from app.dependencies import (
     get_project_member_context, ProjectMemberContext, require_role,
     can_user_view_access_level, require_csrf
 )
-from app.security import sanitize_text
+from app.security import sanitize_text, generate_stub_ref
 from app.services.pipeline import run_claim_pipeline
 
 router = APIRouter(prefix="/api/projects/{project_id}/claims", tags=["claims"])
 
 @router.get("", response_model=List[ClaimResponse])
 def list_claims(
+    include_stubs: bool = False,
     ctx: ProjectMemberContext = Depends(get_project_member_context),
     db: Session = Depends(get_db)
 ):
     """
     CRITICAL RULE:
-    A claim is visible only if the viewer may see ALL of its evidence snippets.
-    If any cited snippet is restricted or inaccessible to ctx.role, the entire claim is hidden.
+    A claim is fully visible only if the viewer may see ALL of its evidence snippets.
+    If include_stubs=False (default): claims with restricted citations are omitted.
+    If include_stubs=True: claims with restricted citations are returned as sanitized Redaction Stubs
+    exposing only count and category, with zero snippet text or leaking IDs.
     """
     all_claims = (
         db.query(Claim)
@@ -40,16 +43,40 @@ def list_claims(
     visible_claims = []
     for c in all_claims:
         can_view_claim = True
+        restricted_count = 0
         # Check every cited snippet's access level
         for cit in c.citations:
             snippet = cit.snippet
             if snippet:
                 if not can_user_view_access_level(ctx.role, snippet.access_level):
                     can_view_claim = False
-                    break
+                    restricted_count += 1
         
         if can_view_claim:
-            visible_claims.append(c)
+            resp = ClaimResponse.model_validate(c)
+            resp.is_redacted = False
+            visible_claims.append(resp)
+        elif include_stubs:
+            # Redaction Stub: shows only count and category, zero quoted text or real claim/snippet/source IDs
+            count_label = f"{restricted_count} restricted source" if restricted_count == 1 else f"{restricted_count} restricted sources"
+            opaque_stub_id = generate_stub_ref(c.id, ctx.user.id, ctx.project.id)
+            stub = ClaimResponse(
+                id=opaque_stub_id,
+                project_id=c.project_id,
+                claim_text=f"{count_label}: ask the approver",
+                status=c.status,
+                category=c.category,
+                confidence=c.confidence,
+                created_by="restricted",
+                review_status=c.review_status,
+                citations=[],
+                history=[],
+                is_redacted=True,
+                restricted_count=restricted_count,
+                created_at=c.created_at,
+                updated_at=c.updated_at
+            )
+            visible_claims.append(stub)
 
     # Audit log access
     audit = AuditLog(

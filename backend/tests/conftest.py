@@ -98,7 +98,11 @@ def outsider_user(db_session):
     return user
 
 def create_auth_headers_and_cookies(user: User):
-    token = create_access_token({"sub": user.id, "role": user.role})
+    token = create_access_token({
+        "sub": user.id,
+        "role": user.role,
+        "token_version": getattr(user, "token_version", 1) or 1
+    })
     csrf = generate_csrf_token()
     cookies = {"access_token": token, "csrf_token": csrf}
     headers = {"X-CSRF-Token": csrf}

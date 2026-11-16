@@ -43,6 +43,8 @@ export interface ClaimItem {
   review_status: "pending" | "approved" | "rejected";
   citations: any[];
   history: ClaimHistoryItem[];
+  is_redacted?: boolean;
+  restricted_count?: number;
   created_at: string;
 }
 
@@ -52,6 +54,8 @@ interface ClaimCardProps {
   onSelect: () => void;
   onReview?: (claimId: string, action: "approve" | "reject") => Promise<void>;
   onEdit?: (claimId: string, newText: string, newStatus: string) => Promise<void>;
+  onRequestAccess?: (claimId: string, category: string) => void;
+  accessStatus?: string; // "pending" | "granted" | "declined"
   userRole?: string;
 }
 
@@ -61,6 +65,8 @@ export function ClaimCard({
   onSelect,
   onReview,
   onEdit,
+  onRequestAccess,
+  accessStatus,
   userRole = "incoming",
 }: ClaimCardProps) {
   const [isEditing, setIsEditing] = useState(false);
@@ -68,6 +74,74 @@ export function ClaimCard({
   const [editStatus, setEditStatus] = useState(claim.status);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // REDACTION STUB CARD
+  if (claim.is_redacted) {
+    return (
+      <div
+        className="rounded-lg border border-border/80 bg-muted/30 p-4 space-y-3 transition-all"
+        role="region"
+        aria-label="Restricted Claim Stub"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-[10px] uppercase font-mono border-slate-500/40 text-slate-400 bg-slate-500/10">
+              {claim.category}
+            </Badge>
+            <Badge variant="outline" className="text-[10px] font-mono border-rose-500/30 text-rose-400 bg-rose-500/10">
+              Restricted Clearance
+            </Badge>
+          </div>
+          {accessStatus && (
+            <Badge
+              variant="outline"
+              className={`text-[10px] uppercase font-mono ${
+                accessStatus === "granted"
+                  ? "border-emerald-500/30 text-emerald-400 bg-emerald-500/10"
+                  : accessStatus === "declined"
+                  ? "border-rose-500/30 text-rose-400 bg-rose-500/10"
+                  : "border-amber-500/30 text-amber-400 bg-amber-500/10"
+              }`}
+            >
+              Access {accessStatus}
+            </Badge>
+          )}
+        </div>
+
+        <div className="space-y-1">
+          <p className="text-xs sm:text-sm font-semibold text-foreground flex items-center gap-1.5">
+            <span className="text-amber-400">🔒</span>
+            {claim.claim_text}
+          </p>
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            This claim relies on confidential evidence restricted to approvers. To view details and citations, submit an access request.
+          </p>
+        </div>
+
+        <div className="flex items-center justify-between pt-1 border-t border-border/30">
+          <span className="text-[10px] font-mono text-muted-foreground">
+            {claim.restricted_count || 1} restricted {claim.restricted_count === 1 ? "source" : "sources"}
+          </span>
+
+          {userRole !== "approver" && onRequestAccess && (
+            <Button
+              onClick={() => onRequestAccess(claim.id, claim.category)}
+              disabled={accessStatus === "pending" || accessStatus === "granted"}
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs border-amber-500/40 text-amber-400 hover:bg-amber-500/10"
+            >
+              {accessStatus === "pending"
+                ? "Request Pending"
+                : accessStatus === "granted"
+                ? "Access Granted"
+                : "Request Access"}
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   const renderStatusBadge = () => {
     switch (claim.status) {

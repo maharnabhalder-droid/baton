@@ -41,6 +41,13 @@ class Settings:
         self.ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
         self.REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
+        # Cookie Security - defaults to True in production, can be explicitly overridden via COOKIE_SECURE env var
+        cookie_sec_env = os.getenv("COOKIE_SECURE")
+        if cookie_sec_env is not None:
+            self.COOKIE_SECURE: bool = cookie_sec_env.lower() in ("true", "1", "yes")
+        else:
+            self.COOKIE_SECURE: bool = (self.ENVIRONMENT == "production")
+
         # Rate Limiting Store (Redis for distributed multi-server, empty for in-memory fallback)
         self.REDIS_URL: str = os.getenv("REDIS_URL", "")
 
@@ -50,6 +57,8 @@ class Settings:
 
         # Third-party APIs & Webhooks
         self.GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+        self.GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+        self.GEMINI_TIMEOUT_SECONDS: int = int(os.getenv("GEMINI_TIMEOUT_SECONDS", "15"))
         self.GITHUB_WEBHOOK_SECRET: str = os.getenv("GITHUB_WEBHOOK_SECRET", "baton_github_webhook_hmac_secret_32_bytes!")
         self.GITHUB_PAT: str = os.getenv("GITHUB_PAT", "")
 

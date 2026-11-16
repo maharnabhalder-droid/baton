@@ -12,7 +12,7 @@ import { Sparkles, ShieldCheck, KeyRound, AlertCircle, ArrowRight } from "lucide
 
 export default function LoginPage() {
   const router = useRouter();
-  const { refreshUser } = useAuth();
+  const { refreshUser, tryDemo } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -66,11 +66,7 @@ export default function LoginPage() {
     setDemoLoading(true);
     setError(null);
     try {
-      await apiRequest("/api/auth/demo", {
-        method: "POST",
-        data: { role },
-      });
-      await refreshUser();
+      await tryDemo(role);
       router.push("/dashboard");
     } catch (err: any) {
       setError(`Failed to create demo session: ${err.message}`);
@@ -129,6 +125,7 @@ export default function LoginPage() {
                 <input
                   id="email"
                   type="email"
+                  autoComplete="username"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -144,6 +141,7 @@ export default function LoginPage() {
                 <input
                   id="password"
                   type="password"
+                  autoComplete="current-password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}

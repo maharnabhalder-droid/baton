@@ -85,6 +85,7 @@ class Source(Base):
     original_filename = Column(String(255), nullable=False)
     file_type = Column(String(50), nullable=False)
     size_bytes = Column(Integer, nullable=False, default=0)
+    redact_pii = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=utc_now, nullable=False)
 
     project = relationship("Project", back_populates="sources")
@@ -173,8 +174,48 @@ class HandoverAck(Base):
     user_id = Column(String(36), ForeignKey("users.id"), nullable=False)
     acknowledged_at = Column(DateTime, default=utc_now, nullable=False)
     notes = Column(Text, nullable=True)
+    score = Column(Float, nullable=True)
+    missed_topics = Column(Text, nullable=True)
+    time_taken_seconds = Column(Integer, nullable=True)
+    completed_rehearsal = Column(Boolean, default=False, nullable=False)
 
     project = relationship("Project", back_populates="acknowledgements")
+
+class RehearsalAttempt(Base):
+    __tablename__ = "rehearsal_attempts"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    project_id = Column(String(36), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    questions = Column(Text, nullable=False)  # JSON serialized list of generated questions
+    answers = Column(Text, nullable=True)    # JSON serialized list of submitted answers & grades
+    score = Column(Float, nullable=False, default=0.0)
+    weak_topics = Column(Text, nullable=True) # JSON serialized list of weak topic strings
+    time_taken_seconds = Column(Integer, nullable=False, default=0)
+    passed = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime, default=utc_now, nullable=False)
+
+    project = relationship("Project")
+    user = relationship("User")
+
+class AccessRequest(Base):
+    __tablename__ = "access_requests"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    project_id = Column(String(36), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    claim_id = Column(String(36), ForeignKey("claims.id", ondelete="CASCADE"), nullable=True, index=True)
+    source_id = Column(String(36), ForeignKey("sources.id", ondelete="CASCADE"), nullable=True, index=True)
+    category = Column(String(50), nullable=False, default="restricted")
+    reason = Column(Text, nullable=True)
+    status = Column(String(20), nullable=False, default="pending")  # pending, granted, declined
+    created_at = Column(DateTime, default=utc_now, nullable=False)
+    resolved_at = Column(DateTime, nullable=True)
+    resolved_by = Column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+
+    project = relationship("Project")
+    user = relationship("User", foreign_keys=[user_id])
+    resolver = relationship("User", foreign_keys=[resolved_by])
 
 class AuditLog(Base):
     __tablename__ = "audit_logs"

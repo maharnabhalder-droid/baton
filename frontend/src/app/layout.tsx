@@ -24,6 +24,9 @@ const mono = JetBrains_Mono({
 export const metadata = {
   title: "Baton | Evidence-Backed Knowledge Handover",
   description: "Baton rebuilds project history as an evidence graph, asks the leaver only what documents cannot explain, and verifies the successor understood.",
+  other: {
+    "color-scheme": "light dark",
+  },
 };
 
 export default function RootLayout({

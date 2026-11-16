@@ -38,6 +38,7 @@ def get_client_ip(request: Request) -> str:
 limiter = Limiter(
     key_func=get_client_ip,
     storage_uri=settings.REDIS_URL if settings.REDIS_URL else "memory://",
+    enabled=not bool(os.environ.get("TESTING") == "1"),
 )
 
 # Password Hasher (Argon2id)
@@ -187,3 +188,45 @@ def validate_uploaded_file(filename: str, file_bytes: bytes) -> str:
     # Return safe server-side filename (UUID + safe ext)
     safe_filename = f"{uuid.uuid4().hex}{ext}"
     return safe_filename
+
+# Opaque Stub Reference Generator & Resolver (Zero Real-ID Leakage)
+def generate_stub_ref(claim_id: str, user_id: str, project_id: str) -> str:
+    """
+    Generates a secure, per-viewer, server-verifiable opaque stub reference.
+    Never exposes the real claim UUID to unauthorized viewers.
+    """
+    payload = {
+        "cid": str(claim_id),
+        "uid": str(user_id),
+        "pid": str(project_id),
+        "type": "stub_ref",
+        "exp": int(time.time()) + 7 * 24 * 3600
+    }
+    token = jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
+    return f"stub_ref_{token}"
+
+def resolve_stub_ref(stub_ref: str, expected_user_id: str, expected_project_id: str) -> str:
+    """
+    Resolves an opaque stub reference back to the real claim UUID.
+    Rejects forged references or references replayed by a different user or project.
+    """
+    if not stub_ref.startswith("stub_ref_"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid stub reference format."
+        )
+    token = stub_ref[len("stub_ref_"):]
+    try:
+        payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: invalid, expired, or tampered stub reference."
+        )
+    if payload.get("type") != "stub_ref":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden: invalid reference type.")
+    if payload.get("uid") != str(expected_user_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden: stub reference belongs to another user.")
+    if payload.get("pid") != str(expected_project_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden: stub reference belongs to another project.")
+    return payload["cid"]

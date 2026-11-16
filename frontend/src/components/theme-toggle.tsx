@@ -20,6 +20,10 @@ export function ThemeToggle() {
     } else {
       document.documentElement.classList.remove("dark");
     }
+    const colorSchemeMeta = document.querySelector('meta[name="color-scheme"]');
+    if (colorSchemeMeta) {
+      colorSchemeMeta.setAttribute("content", nextTheme);
+    }
     try {
       localStorage.setItem("baton-theme", nextTheme);
     } catch (_) {}

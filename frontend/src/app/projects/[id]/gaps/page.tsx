@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { apiRequest } from "@/lib/api";
 import { Navbar } from "@/components/navbar";
@@ -24,21 +24,21 @@ export default function GapsPage({
   const [detecting, setDetecting] = useState(false);
   const [toastMessage, setToastMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  const fetchGaps = () => {
+  const showToast = useCallback((type: "success" | "error", text: string) => {
+    setToastMessage({ type, text });
+    setTimeout(() => setToastMessage(null), 3500);
+  }, []);
+
+  const fetchGaps = useCallback(() => {
     apiRequest<GapItem[]>(`/api/projects/${projectId}/gaps`)
       .then(setGaps)
       .catch((err) => showToast("error", `Failed to load gaps: ${err.message}`))
       .finally(() => setLoading(false));
-  };
+  }, [projectId, showToast]);
 
   useEffect(() => {
     fetchGaps();
-  }, [projectId]);
-
-  const showToast = (type: "success" | "error", text: string) => {
-    setToastMessage({ type, text });
-    setTimeout(() => setToastMessage(null), 3500);
-  };
+  }, [fetchGaps]);
 
   const handleRunDetection = async () => {
     setDetecting(true);

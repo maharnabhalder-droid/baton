@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useState, useCallback } from "react";
 import { Users, Ticket, Copy, Check, Clock, ShieldCheck, UserCheck } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
@@ -49,7 +49,7 @@ export default function MembersPage({
   const [creating, setCreating] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
-  const fetchMembersAndInvites = () => {
+  const fetchMembersAndInvites = useCallback(() => {
     apiRequest<Member[]>(`/api/projects/${projectId}/members`)
       .then(setMembers)
       .catch(console.error);
@@ -60,11 +60,11 @@ export default function MembersPage({
         .catch(console.error);
     }
     setLoading(false);
-  };
+  }, [projectId, user]);
 
   useEffect(() => {
     fetchMembersAndInvites();
-  }, [projectId, user]);
+  }, [fetchMembersAndInvites]);
 
   const handleCreateInvite = async (e: React.FormEvent) => {
     e.preventDefault();
