@@ -12,7 +12,9 @@
 .env.test.local
 .env.production.local
 backend/.env
+backend/.env.*
 frontend/.env.local
+frontend/.env.*.local
 !.env.example
 
 # ------------------------------------------------------------------------------
@@ -20,6 +22,8 @@ frontend/.env.local
 # ------------------------------------------------------------------------------
 *.db
 *.db-journal
+*.db-shm
+*.db-wal
 *.sqlite
 *.sqlite3
 baton.db
@@ -29,15 +33,16 @@ uploads/
 *.tmp
 
 # ------------------------------------------------------------------------------
-# Python Virtual Environments & Bytecode Artifacts
+# Python Virtual Environments, Bytecode & Caches
 # ------------------------------------------------------------------------------
 __pycache__/
 **/__pycache__/
 *.py[cod]
 *$py.class
 .venv/
-venv/
+.venv*/
 **/venv/
+venv/
 env/
 ENV/
 .pytest_cache/
@@ -56,7 +61,7 @@ eggs/
 *.egg
 
 # ------------------------------------------------------------------------------
-# Node.js, Next.js & Frontend Build Outputs
+# Node.js, Next.js & Vercel Build Outputs
 # ------------------------------------------------------------------------------
 node_modules/
 **/node_modules/
@@ -64,6 +69,8 @@ node_modules/
 **/.next/
 out/
 **/out/
+.vercel/
+**/.vercel/
 *.tsbuildinfo
 npm-debug.log*
 yarn-debug.log*
@@ -83,6 +90,9 @@ pnpm-debug.log*
 generate_pdf_report.py
 BATON_MVP_REPORT.pdf
 *.pdf
+*JUDGING_REPORT*.md
+scratch/
+**/scratch/
 
 # ------------------------------------------------------------------------------
 # Logs & Diagnostic Files
@@ -105,3 +115,4 @@ Desktop.ini
 *.swp
 *.swo
 *~
+
